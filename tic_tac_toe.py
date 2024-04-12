@@ -1,3 +1,11 @@
+"""
+This is a working tic tac toe implementation that is playable as its own game by running
+this script.
+
+Created by Ben Collister and Christine Cartwright
+Using the guide https://realpython.com/tic-tac-toe-python/
+"""
+
 import tkinter as tk #Currently 8.6
 from tkinter import font
 from itertools import cycle
