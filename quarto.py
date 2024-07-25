@@ -1,3 +1,13 @@
+"""
+This is a working tic tac toe implementation that is playable as its own game by running
+this script.
+
+Created by Ben Collister and Christine Cartwright
+Using the guide https://realpython.com/tic-tac-toe-python/
+"""
+
+## Issue with buttons collapsing if a row or column is completed
+
 import tkinter as tk #Currently 8.6
 from tkinter import font
 from itertools import cycle
@@ -6,6 +16,7 @@ from typing import NamedTuple
 class Player(NamedTuple):
     # How to do as a 3D shape rather than flat shape
     label: str
+    image: tk.PhotoImage
     color: str
 
 class Move(NamedTuple):
@@ -13,18 +24,14 @@ class Move(NamedTuple):
     col: int
     label: str = ""
 
+# root = tk.Tk()
 BOARD_SIZE = 4
 #Need to change default player - technically one person doesn't have label
-DEFAULT_PLAYERS = (
-    Player(label="X", color="blue"),
-    Player(label="O", color="green"),
-)
+
     
 class QuartoGame:
-    def __init__(self, players=DEFAULT_PLAYERS, board_size=BOARD_SIZE):
-        self._players = cycle(players)
+    def __init__(self, board_size=BOARD_SIZE):
         self.board_size = board_size
-        self.current_player = next(self._players)
         self.winner_combo = []
         self._current_moves = []
         self._has_winner = False
@@ -87,11 +94,7 @@ class QuartoGame:
             move.label for row in self._current_moves for move in row
         )
         return no_winner and all(played_moves)
-    
-    def toggle_player(self):
-        """Return a toggled player."""
-        self.current_player = next(self._players)
-        
+
     def reset_game(self):
         """Reset the game state to play again."""
         for row, row_content in enumerate(self._current_moves):
@@ -105,15 +108,28 @@ class QuartoGame:
 # Messages which tell user which board they must press button on at each stage
 # For very first move, potentially already have randomly chosen piece selected
 # for player 1 to put down
+    
 class QuartoBoard(tk.Tk):
     def __init__(self, game):
         super().__init__()
         self.title("Quarto Game")
+        img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
+        img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
+        players = (
+            Player(label="X", image = img, color="blue"),
+            Player(label="O", image = img2, color="green"),
+        )
+        self._players = cycle(players)
         self._cells = {}
         self._game = game
+        self.current_player = next(self._players)
         self._create_menu()
-        self._create_board_display()
-        self._create_board_grid()
+        pieces_board = self._create_board_display()
+        pieces_board = self._create_board_grid()
+        game_board = self._create_board_display()
+        game_board = self._create_board_grid()
+        # self.blank = tk.PhotoImage()
+        
 
     def _create_board_display(self):
         display_frame = tk.Frame(master=self)
@@ -128,17 +144,18 @@ class QuartoBoard(tk.Tk):
     def _create_board_grid(self):
         grid_frame = tk.Frame(master=self) #Hold the game grid cells
         grid_frame.pack()
+        grid_frame.pack_propagate(0)
         for row in range(self._game.board_size):
-            self.rowconfigure(row, weight=1, minsize=50)
-            self.columnconfigure(row, weight=1, minsize=75)
+            self.rowconfigure(row, weight=1, minsize=50, uniform='row')
+            self.columnconfigure(row, weight=1, minsize=75, uniform='row')
             for col in range(self._game.board_size):
                 button = tk.Button(
                     master=grid_frame,
-                    text="",
+                    image=tk.PhotoImage(), #self.blank_image,
                     font=font.Font(size=36, weight="bold"),
                     fg="black",
-                    width=3,
-                    height=2,
+                    width=100,
+                    height=100,
                     highlightbackground="lightblue",
                 )
                 self._cells[button] = (row, col)
@@ -150,14 +167,19 @@ class QuartoBoard(tk.Tk):
                     pady=5,
                     sticky="nsew"
                 )
-                
+                button.grid_propagate(False)
+
+    def toggle_player(self):
+        """Return a toggled player."""
+        self.current_player = next(self._players)
+    
     # The .mainloop() method on the Tk class runs what’s known as the application’s 
     # main loop or event loop. This is an infinite loop in which all the GUI events happen.
     def play(self, event):
         """Handle a player's move."""
         clicked_btn = event.widget
         row, col = self._cells[clicked_btn]
-        move = Move(row, col, self._game.current_player.label)
+        move = Move(row, col, self.current_player.label)
         if self._game.is_valid_move(move): # Maybe show error message to user if False?
             self._update_button(clicked_btn)
             self._game.process_move(move)
@@ -168,18 +190,19 @@ class QuartoBoard(tk.Tk):
                 self._update_display(msg="Tied game!", color="red")
             elif self._game.has_winner():
                 self._highlight_cells()
-                msg = f'Player "{self._game.current_player.label}" won!'
-                color = self._game.current_player.color
+                msg = f'Player "{self.current_player.label}" won!'
+                color = self.current_player.color
                 self._update_display(msg, color)
             else:
-                self._game.toggle_player()
-                msg = f"{self._game.current_player.label}'s turn"
+                self.toggle_player()
+                msg = f"{self.current_player.label}'s turn"
                 self._update_display(msg)
                 
     def _update_button(self, clicked_btn):
         # Need to set to a 3D image for us
-        clicked_btn.config(text=self._game.current_player.label)
-        clicked_btn.config(fg=self._game.current_player.color)
+        clicked_btn.config(image=self.current_player.image)
+        #clicked_btn.config(text=self.current_player.label)
+        #clicked_btn.config(fg=self.current_player.color)
         
     def _update_display(self, msg, color="black"):
         self.display["text"] = msg
@@ -212,10 +235,70 @@ class QuartoBoard(tk.Tk):
             button.config(text="")
             button.config(fg="black")
 
+# class PiecesBoard(QuartoBoard):
+    
+#     def __init__(self):
+#         # super().__init__() this might still be needed to take the parent classes attributes
+#         # self.title("Quarto Game")
+#         self.img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
+#         img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
+#         players = (
+#             Player(label="X", image = self.img, color="blue"),
+#             Player(label="O", image = img2, color="green"),
+#         )
+#         # self._players = cycle(players)
+#         # self._cells = {}
+#         # # self._game = game
+#         # self.current_player = next(self._players)
+#         # # self._create_menu()
+#         # self._create_board_display()
+#         # self._create_board_grid()
+#         # self.blank = tk.PhotoImage()
+        
+#     def _create_board_display(self):
+#         display_frame = tk.Frame(master=self)
+#         display_frame.pack(fill=tk.X) #frame fills width if window resized
+#         self.display = tk.Label(
+#               master=display_frame, #label needs to live in frame
+#               text="Ready?",
+#               font=font.Font(size=28, weight="bold"),
+#         )
+#         self.display.pack()
+
+#     def _create_board_grid(self):
+#         grid_frame = tk.Frame(master=self) #Hold the game grid cells
+#         grid_frame.pack()
+#         grid_frame.pack_propagate(0)
+#         for row in range(self._game.board_size):
+#             self.rowconfigure(row, weight=1, minsize=50, uniform='row')
+#             self.columnconfigure(row, weight=1, minsize=75, uniform='row')
+#             for col in range(self._game.board_size):
+#                 button = tk.Button(
+#                     master=grid_frame,
+#                     image=tk.PhotoImage(), #self.blank_image,
+#                     font=font.Font(size=36, weight="bold"),
+#                     fg="black",
+#                     width=100,
+#                     height=100,
+#                     highlightbackground="lightblue",
+#                 )
+#                 self._cells[button] = (row, col)
+#                 button.bind("<ButtonPress-1>", self.play)
+#                 button.grid(
+#                     row=row,
+#                     column=col,
+#                     padx=4,
+#                     pady=4,
+#                     sticky="nsew"
+#                 )
+#                 button.grid_propagate(False)
+
+
 def main():
     """Create the game's board and run its main loop."""
     game = QuartoGame()
     board = QuartoBoard(game)
+    board.resizable(False, False)
     board.mainloop()
 
 if __name__ == "__main__":

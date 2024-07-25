@@ -1,13 +1,3 @@
-"""
-This is a working tic tac toe implementation that is playable as its own game by running
-this script.
-
-Created by Ben Collister and Christine Cartwright
-Using the guide https://realpython.com/tic-tac-toe-python/
-"""
-
-## Issue with buttons collapsing if a row or column is completed
-
 import tkinter as tk #Currently 8.6
 from tkinter import font
 from itertools import cycle
@@ -15,23 +5,33 @@ from typing import NamedTuple
 
 class Player(NamedTuple):
     # How to do as a 3D shape rather than flat shape
-    label: str
-    image: tk.PhotoImage
-    color: str
+    # label: str
+    # color: str
+    label: tk.PhotoImage
 
 class Move(NamedTuple):
     row: int
     col: int
     label: str = ""
 
-#root = tk.Tk()
 BOARD_SIZE = 4
 #Need to change default player - technically one person doesn't have label
 
+imm0 = PhotoImage(root, file="pieces/pieces/cyan_cuboid_small_striped.png")
+DEFAULT_PLAYERS = (
+    # Player(label="X", color="blue"),
+    # Player(label="O", color="green"),
+    Player(label = imm0),
+    Player(label = imm0)
+    
+)
+tk.PhotoImage
     
 class QuartoGame:
-    def __init__(self, board_size=BOARD_SIZE):
+    def __init__(self, players=DEFAULT_PLAYERS, board_size=BOARD_SIZE):
+        self._players = cycle(players)
         self.board_size = board_size
+        self.current_player = next(self._players)
         self.winner_combo = []
         self._current_moves = []
         self._has_winner = False
@@ -94,7 +94,11 @@ class QuartoGame:
             move.label for row in self._current_moves for move in row
         )
         return no_winner and all(played_moves)
-
+    
+    def toggle_player(self):
+        """Return a toggled player."""
+        self.current_player = next(self._players)
+        
     def reset_game(self):
         """Reset the game state to play again."""
         for row, row_content in enumerate(self._current_moves):
@@ -112,20 +116,11 @@ class QuartoBoard(tk.Tk):
     def __init__(self, game):
         super().__init__()
         self.title("Quarto Game")
-        img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
-        img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
-        players = (
-            Player(label="X", image = img, color="blue"),
-            Player(label="O", image = img2, color="green"),
-        )
-        self._players = cycle(players)
         self._cells = {}
         self._game = game
-        self.current_player = next(self._players)
         self._create_menu()
         self._create_board_display()
         self._create_board_grid()
-        
 
     def _create_board_display(self):
         display_frame = tk.Frame(master=self)
@@ -162,18 +157,14 @@ class QuartoBoard(tk.Tk):
                     pady=5,
                     sticky="nsew"
                 )
-
-    def toggle_player(self):
-        """Return a toggled player."""
-        self.current_player = next(self._players)
-    
+                
     # The .mainloop() method on the Tk class runs what’s known as the application’s 
     # main loop or event loop. This is an infinite loop in which all the GUI events happen.
     def play(self, event):
         """Handle a player's move."""
         clicked_btn = event.widget
         row, col = self._cells[clicked_btn]
-        move = Move(row, col, self.current_player.label)
+        move = Move(row, col, self._game.current_player.label)
         if self._game.is_valid_move(move): # Maybe show error message to user if False?
             self._update_button(clicked_btn)
             self._game.process_move(move)
@@ -184,19 +175,18 @@ class QuartoBoard(tk.Tk):
                 self._update_display(msg="Tied game!", color="red")
             elif self._game.has_winner():
                 self._highlight_cells()
-                msg = f'Player "{self.current_player.label}" won!'
-                color = self.current_player.color
+                msg = f'Player "{self._game.current_player.label}" won!'
+                color = self._game.current_player.color
                 self._update_display(msg, color)
             else:
-                self.toggle_player()
-                msg = f"{self.current_player.label}'s turn"
+                self._game.toggle_player()
+                msg = f"{self._game.current_player.label}'s turn"
                 self._update_display(msg)
                 
     def _update_button(self, clicked_btn):
         # Need to set to a 3D image for us
-        clicked_btn.config(image=self.current_player.image)
-        #clicked_btn.config(text=self.current_player.label)
-        #clicked_btn.config(fg=self.current_player.color)
+        clicked_btn.config(text=self._game.current_player.label)
+        clicked_btn.config(fg=self._game.current_player.color)
         
     def _update_display(self, msg, color="black"):
         self.display["text"] = msg
@@ -228,8 +218,6 @@ class QuartoBoard(tk.Tk):
             button.config(highlightbackground="lightblue")
             button.config(text="")
             button.config(fg="black")
-
-
 
 def main():
     """Create the game's board and run its main loop."""
