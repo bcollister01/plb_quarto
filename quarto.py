@@ -4,6 +4,17 @@ this script.
 
 Created by Ben Collister and Christine Cartwright
 Using the guide https://realpython.com/tic-tac-toe-python/
+
+Selection_grid is where we select our pieces and is pre-filled in at the start with all of the pieces and action on this grid should trigger the player switch.
+Play_grid is where we put down a selected piece.
+Ideal is to have chosen_grid which shows the chosen piece.
+Can we move the board so that it is side by side with a space?
+We have commented out _highlight_cells when someone has won as this was leading to a pyimage not found error.
+Pack is putting them all side by side - workable.
+Alternative is grid - but it’s making every row column the same width and we need them to find a way to make it closer together.
+create_board_display is just the message at the top so it does not need a play and selection version.
+
+Next time: prefill one board with all of the pieces.
 """
 
 ## Issue with buttons collapsing if a row or column is completed
@@ -124,16 +135,16 @@ class QuartoBoard(tk.Tk):
         self._game = game
         self.current_player = next(self._players)
         self._create_menu()
-        pieces_board = self._create_board_display()
-        pieces_board = self._create_board_grid()
-        game_board = self._create_board_display()
-        game_board = self._create_board_grid()
+        selection_board = self._create_selection_board_display()
+        selection_board = self._create_selection_board_grid()
+        # play_board = self._create_play_board_display()
+        play_board = self._create_play_board_grid()
         # self.blank = tk.PhotoImage()
-        
 
-    def _create_board_display(self):
+    def _create_selection_board_display(self):
         display_frame = tk.Frame(master=self)
-        display_frame.pack(fill=tk.X) #frame fills width if window resized
+        # display_frame.pack(side=tk.TOP) #.pack(side=tk.LEFT)#frame fills width if window resized
+        display_frame.grid(row=0, column=0)
         self.display = tk.Label(
               master=display_frame, #label needs to live in frame
               text="Ready?",
@@ -141,9 +152,50 @@ class QuartoBoard(tk.Tk):
         )
         self.display.pack()
 
-    def _create_board_grid(self):
+    # def _create_play_board_display(self):
+    #     display_frame = tk.Frame(master=self)
+    #     display_frame.pack(side=tk.RIGHT) #frame fills width if window resized
+    #     self.display = tk.Label(
+    #           master=display_frame, #label needs to live in frame
+    #           text="Test",
+    #           font=font.Font(size=28, weight="bold"),
+    #     )
+    #     self.display.pack()
+
+
+    def _create_selection_board_grid(self):
         grid_frame = tk.Frame(master=self) #Hold the game grid cells
-        grid_frame.pack()
+        # grid_frame.pack(side=tk.LEFT)
+        grid_frame.grid(row=1, column=0)
+        grid_frame.pack_propagate(0)
+        for row in range(self._game.board_size):
+            self.rowconfigure(row, weight=1, minsize=50, uniform='row')
+            self.columnconfigure(row, weight=1, minsize=75, uniform='row')
+            for col in range(self._game.board_size):
+                button = tk.Button(
+                    master=grid_frame,
+                    image=tk.PhotoImage(), #self.blank_image,
+                    font=font.Font(size=36, weight="bold"),
+                    fg="black",
+                    width=100,
+                    height=100,
+                    highlightbackground="lightblue",
+                )
+                self._cells[button] = (row, col)
+                button.bind("<ButtonPress-1>", self.play)
+                button.grid(
+                    row=row,
+                    column=col,
+                    padx=5,
+                    pady=5,
+                    sticky="nsew"
+                )
+                button.grid_propagate(False)
+                
+    def _create_play_board_grid(self):
+        grid_frame = tk.Frame(master=self) #Hold the game grid cells
+        # grid_frame.pack(side=tk.RIGHT)
+        grid_frame.grid(row=1, column=2)
         grid_frame.pack_propagate(0)
         for row in range(self._game.board_size):
             self.rowconfigure(row, weight=1, minsize=50, uniform='row')
@@ -189,7 +241,7 @@ class QuartoBoard(tk.Tk):
             if self._game.is_tied():
                 self._update_display(msg="Tied game!", color="red")
             elif self._game.has_winner():
-                self._highlight_cells()
+                # self._highlight_cells()
                 msg = f'Player "{self.current_player.label}" won!'
                 color = self.current_player.color
                 self._update_display(msg, color)
@@ -234,65 +286,6 @@ class QuartoBoard(tk.Tk):
             button.config(highlightbackground="lightblue")
             button.config(text="")
             button.config(fg="black")
-
-# class PiecesBoard(QuartoBoard):
-    
-#     def __init__(self):
-#         # super().__init__() this might still be needed to take the parent classes attributes
-#         # self.title("Quarto Game")
-#         self.img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
-#         img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
-#         players = (
-#             Player(label="X", image = self.img, color="blue"),
-#             Player(label="O", image = img2, color="green"),
-#         )
-#         # self._players = cycle(players)
-#         # self._cells = {}
-#         # # self._game = game
-#         # self.current_player = next(self._players)
-#         # # self._create_menu()
-#         # self._create_board_display()
-#         # self._create_board_grid()
-#         # self.blank = tk.PhotoImage()
-        
-#     def _create_board_display(self):
-#         display_frame = tk.Frame(master=self)
-#         display_frame.pack(fill=tk.X) #frame fills width if window resized
-#         self.display = tk.Label(
-#               master=display_frame, #label needs to live in frame
-#               text="Ready?",
-#               font=font.Font(size=28, weight="bold"),
-#         )
-#         self.display.pack()
-
-#     def _create_board_grid(self):
-#         grid_frame = tk.Frame(master=self) #Hold the game grid cells
-#         grid_frame.pack()
-#         grid_frame.pack_propagate(0)
-#         for row in range(self._game.board_size):
-#             self.rowconfigure(row, weight=1, minsize=50, uniform='row')
-#             self.columnconfigure(row, weight=1, minsize=75, uniform='row')
-#             for col in range(self._game.board_size):
-#                 button = tk.Button(
-#                     master=grid_frame,
-#                     image=tk.PhotoImage(), #self.blank_image,
-#                     font=font.Font(size=36, weight="bold"),
-#                     fg="black",
-#                     width=100,
-#                     height=100,
-#                     highlightbackground="lightblue",
-#                 )
-#                 self._cells[button] = (row, col)
-#                 button.bind("<ButtonPress-1>", self.play)
-#                 button.grid(
-#                     row=row,
-#                     column=col,
-#                     padx=4,
-#                     pady=4,
-#                     sticky="nsew"
-#                 )
-#                 button.grid_propagate(False)
-
 
 def main():
     """Create the game's board and run its main loop."""
