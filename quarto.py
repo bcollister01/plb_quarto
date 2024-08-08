@@ -13,12 +13,20 @@ We have commented out _highlight_cells when someone has won as this was leading 
 Pack is putting them all side by side - workable.
 Alternative is grid - but it’s making every row column the same width and we need them to find a way to make it closer together.
 create_board_display is just the message at the top so it does not need a play and selection version.
+Piece indexing:
+colour,shape, size,design
+cyan=0, orange=1,
+cuboid=0, cylinder=1, 
+small=0, tall=1, 
+plain=0, striped=1, 
 
 Next time: prefill one board with all of the pieces.
+
 """
 
 ## Issue with buttons collapsing if a row or column is completed
 
+import os
 import tkinter as tk #Currently 8.6
 from tkinter import font
 from itertools import cycle
@@ -124,10 +132,18 @@ class QuartoBoard(tk.Tk):
     def __init__(self, game):
         super().__init__()
         self.title("Quarto Game")
+
+        path = os.getcwd()
+        files = os.listdir(os.path.join(path, 'pieces/'))
+        file_list = sorted([f"pieces/{f}" for f in files])
+        img_list = []
+        for i in file_list:
+            img_list.append(tk.PhotoImage(file=i).subsample(5))
+            
         img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
         img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
         players = (
-            Player(label="X", image = img, color="blue"),
+            Player(label="X", image = img_list[0], color="blue"),
             Player(label="O", image = img2, color="green"),
         )
         self._players = cycle(players)
