@@ -135,16 +135,16 @@ class QuartoBoard(tk.Tk):
         self._game = game
         self.current_player = next(self._players)
         self._create_menu()
-        selection_board = self._create_selection_board_display()
+        self._create_text_display()
         selection_board = self._create_selection_board_grid()
         # play_board = self._create_play_board_display()
         play_board = self._create_play_board_grid()
         # self.blank = tk.PhotoImage()
 
-    def _create_selection_board_display(self):
+    def _create_text_display(self):
         display_frame = tk.Frame(master=self)
         # display_frame.pack(side=tk.TOP) #.pack(side=tk.LEFT)#frame fills width if window resized
-        display_frame.grid(row=0, column=0)
+        display_frame.grid(row=0, column=0, rowspan=1)
         self.display = tk.Label(
               master=display_frame, #label needs to live in frame
               text="Ready?",
@@ -166,7 +166,7 @@ class QuartoBoard(tk.Tk):
     def _create_selection_board_grid(self):
         grid_frame = tk.Frame(master=self) #Hold the game grid cells
         # grid_frame.pack(side=tk.LEFT)
-        grid_frame.grid(row=1, column=0)
+        grid_frame.grid(row=1, column=0, rowspan=3)
         grid_frame.pack_propagate(0)
         for row in range(self._game.board_size):
             self.rowconfigure(row, weight=1, minsize=50, uniform='row')
@@ -195,7 +195,7 @@ class QuartoBoard(tk.Tk):
     def _create_play_board_grid(self):
         grid_frame = tk.Frame(master=self) #Hold the game grid cells
         # grid_frame.pack(side=tk.RIGHT)
-        grid_frame.grid(row=1, column=2)
+        grid_frame.grid(row=1, column=2, rowspan=3)
         grid_frame.pack_propagate(0)
         for row in range(self._game.board_size):
             self.rowconfigure(row, weight=1, minsize=50, uniform='row')
