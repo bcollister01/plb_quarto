@@ -32,7 +32,8 @@ Grid positions:
 _tkinter.TclError: couldn't recognize data in image file "pieces/.ipynb_checkpoints" - 
 just make sure this file is deleted, may have been accidentally created, use ls -al to check
 
-Next time: prefill one board with all of the pieces.
+Next time: Select from left board to put into right board. Need a one square grid in the middle to show
+piece selected and remove from left board.
 
 """
 
