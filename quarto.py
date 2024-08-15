@@ -20,6 +20,9 @@ cuboid=0, cylinder=1,
 small=0, tall=1, 
 plain=0, striped=1, 
 
+_tkinter.TclError: couldn't recognize data in image file "pieces/.ipynb_checkpoints" - 
+just make sure this file is deleted, may have been accidentally created, use ls -al to check
+
 Next time: prefill one board with all of the pieces.
 
 """
