@@ -20,6 +20,15 @@ cuboid=0, cylinder=1,
 small=0, tall=1, 
 plain=0, striped=1, 
 
+Grid positions:
+0 1 2 3
+4 5 6 7 
+8 9 10 11
+12 13 14 15
+
+0000 0001 0010 0011
+0100
+
 _tkinter.TclError: couldn't recognize data in image file "pieces/.ipynb_checkpoints" - 
 just make sure this file is deleted, may have been accidentally created, use ls -al to check
 
@@ -140,8 +149,9 @@ class QuartoBoard(tk.Tk):
         files = os.listdir(os.path.join(path, 'pieces/'))
         file_list = sorted([f"pieces/{f}" for f in files])
         img_list = []
+        # subsample affects image size - small numbers make it bigger
         for i in file_list:
-            img_list.append(tk.PhotoImage(file=i).subsample(5))
+            img_list.append(tk.PhotoImage(file=i).subsample(10))
             
         img = tk.PhotoImage(file="pieces/cyan_cuboid_small_striped.png").subsample(5)
         img2 = tk.PhotoImage(file="pieces/orange_cuboid_small_striped.png").subsample(5)
@@ -155,6 +165,7 @@ class QuartoBoard(tk.Tk):
         self.current_player = next(self._players)
         self._create_menu()
         self._create_text_display()
+        self.img_list = img_list
         selection_board = self._create_selection_board_grid()
         # play_board = self._create_play_board_display()
         play_board = self._create_play_board_grid()
@@ -193,7 +204,7 @@ class QuartoBoard(tk.Tk):
             for col in range(self._game.board_size):
                 button = tk.Button(
                     master=grid_frame,
-                    image=tk.PhotoImage(), #self.blank_image,
+                    image=self.img_list[row * 4 + col], #self.blank_image,
                     font=font.Font(size=36, weight="bold"),
                     fg="black",
                     width=100,
