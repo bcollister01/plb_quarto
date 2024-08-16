@@ -14,7 +14,7 @@ Pack is putting them all side by side - workable.
 Alternative is grid - but it’s making every row column the same width and we need them to find a way to make it closer together.
 create_board_display is just the message at the top so it does not need a play and selection version.
 Piece indexing:
-colour,shape, size,design
+colour, shape, size, design
 cyan=0, orange=1,
 cuboid=0, cylinder=1, 
 small=0, tall=1, 
@@ -148,7 +148,8 @@ class QuartoBoard(tk.Tk):
 
         path = os.getcwd()
         files = os.listdir(os.path.join(path, 'pieces/'))
-        file_list = sorted([f"pieces/{f}" for f in files])
+        file_list = sorted([f"pieces/{f}" for f in files if f.endswith('.png')])
+        print(file_list)
         img_list = []
         # subsample affects image size - small numbers make it bigger
         for i in file_list:
@@ -168,6 +169,7 @@ class QuartoBoard(tk.Tk):
         self._create_text_display()
         self.img_list = img_list
         selection_board = self._create_selection_board_grid()
+        selection_made_board = self._create_selection_made_board_grid()
         # play_board = self._create_play_board_display()
         play_board = self._create_play_board_grid()
         # self.blank = tk.PhotoImage()
@@ -206,6 +208,36 @@ class QuartoBoard(tk.Tk):
                 button = tk.Button(
                     master=grid_frame,
                     image=self.img_list[row * 4 + col], #self.blank_image,
+                    font=font.Font(size=36, weight="bold"),
+                    fg="black",
+                    width=100,
+                    height=100,
+                    highlightbackground="lightblue",
+                )
+                self._cells[button] = (row, col)
+                button.bind("<ButtonPress-1>", self.play)
+                button.grid(
+                    row=row,
+                    column=col,
+                    padx=5,
+                    pady=5,
+                    sticky="nsew"
+                )
+                button.grid_propagate(False)
+
+    def _create_selection_made_board_grid(self):
+        """1x1 grid to hold piece selected by player from left board to put in right board"""
+        grid_frame = tk.Frame(master=self) #Hold the game grid cells
+        # grid_frame.pack(side=tk.LEFT)
+        grid_frame.grid(row=1, column=1, columnspan=1)
+        grid_frame.pack_propagate(0)
+        for row in range(1):
+            self.rowconfigure(row, weight=1, minsize=50, uniform='row')
+            self.columnconfigure(row, weight=1, minsize=75, uniform='row')
+            for col in range(1):
+                button = tk.Button(
+                    master=grid_frame,
+                    image=tk.PhotoImage(),
                     font=font.Font(size=36, weight="bold"),
                     fg="black",
                     width=100,
