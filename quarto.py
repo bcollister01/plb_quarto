@@ -35,6 +35,8 @@ just make sure this file is deleted, may have been accidentally created, use ls 
 Next time: Select from left board to put into right board. Need a one square grid in the middle to show
 piece selected and remove from left board.
 
+Later extensions: Work out how to reimplement reset game again.
+
 """
 
 ## Issue with buttons collapsing if a row or column is completed
@@ -54,7 +56,7 @@ class Player(NamedTuple):
 class Move(NamedTuple):
     row: int
     col: int
-    label: str = ""
+    label: str = "" #Can we put 0000, 0001, .... here?
 
 # root = tk.Tk()
 BOARD_SIZE = 4
@@ -65,13 +67,21 @@ class QuartoGame:
     def __init__(self, board_size=BOARD_SIZE):
         self.board_size = board_size
         self.winner_combo = []
-        self._current_moves = []
+        self._selection_grid_current_moves = []
+        self._play_grid_current_moves = []
         self._has_winner = False
         self._winning_combos = []
-        self._setup_board()
+        self._setup_selection_board()
+        self._setup_play_board()
     
-    def _setup_board(self):
-        self._current_moves = [
+    def _setup_selection_board(self):
+        self._selection_grid_current_moves = [
+            [Move(row, col) for col in range(self.board_size)]
+            for row in range(self.board_size)
+        ]
+
+    def _setup_play_board(self):
+        self._play_grid_current_moves = [
             [Move(row, col) for col in range(self.board_size)]
             for row in range(self.board_size)
         ]
@@ -80,24 +90,37 @@ class QuartoGame:
     def _get_winning_combos(self):
         rows = [
             [(move.row, move.col) for move in row]
-            for row in self._current_moves
+            for row in self._play_grid_current_moves
         ]
         columns = [list(col) for col in zip(*rows)]
         first_diagonal = [row[i] for i, row in enumerate(rows)]
         second_diagonal = [col[j] for j, col in enumerate(reversed(columns))]
         return rows + columns + [first_diagonal, second_diagonal]
     
-    def is_valid_move(self, move):
+    def is_valid_move_selection_grid(self, move):
         """Return True if move is valid, and False otherwise."""
         row, col = move.row, move.col
-        move_was_not_played = self._current_moves[row][col].label == ""
+        move_was_not_played = self._selection_grid_current_moves[row][col].label == ""
+        return move_was_not_played
+
+    def is_valid_move_play_grid(self, move):
+        """Return True if move is valid, and False otherwise."""
+        row, col = move.row, move.col
+        move_was_not_played = self._play_grid_current_moves[row][col].label == ""
         no_winner = not self._has_winner
         return no_winner and move_was_not_played
     
-    def process_move(self, move):
+    def process_selection_move(self, move):
+        """Process the current selection move.
+        To do: add to the middle grid.
+        """
+        row, col = move.row, move.col
+        self._selection_grid_current_moves[row][col] = move
+
+    def process_play_move(self, move):
         """Process the current move and check if it's a win."""
         row, col = move.row, move.col
-        self._current_moves[row][col] = move
+        self._play_grid_current_moves[row][col] = move
         for combo in self._winning_combos:
             #Set logic may not work for ours
             # [1,1,0,0], [0,1,0,1],...
@@ -105,7 +128,7 @@ class QuartoGame:
             # Check for any element being 0 or 4 (min/max statement on array)
             # Pascal 1,4,6,4,1 in terms of shared attributes (0 up to 4)
             results = set(
-                self._current_moves[n][m].label
+                self._play_grid_current_moves[n][m].label
                 for n, m in combo
             )
             is_win = (len(results) == 1) and ("" not in results)
@@ -123,17 +146,17 @@ class QuartoGame:
         no_winner = not self._has_winner
         played_moves = (
             # Has the label of every cell been updated from empty i.e. piece played
-            move.label for row in self._current_moves for move in row
+            move.label for row in self._play_grid_current_moves for move in row
         )
         return no_winner and all(played_moves)
 
-    def reset_game(self):
-        """Reset the game state to play again."""
-        for row, row_content in enumerate(self._current_moves):
-            for col, _ in enumerate(row_content):
-                row_content[col] = Move(row, col)
-        self._has_winner = False
-        self.winner_combo = []
+    # def reset_game(self):
+    #     """Reset the game state to play again."""
+    #     for row, row_content in enumerate(self._current_moves):
+    #         for col, _ in enumerate(row_content):
+    #             row_content[col] = Move(row, col)
+    #     self._has_winner = False
+    #     self.winner_combo = []
 
 # Maybe second board for pieces - takes a piece off and sets it to empty
 # Labels above each board
@@ -149,7 +172,6 @@ class QuartoBoard(tk.Tk):
         path = os.getcwd()
         files = os.listdir(os.path.join(path, 'pieces/'))
         file_list = sorted([f"pieces/{f}" for f in files if f.endswith('.png')])
-        print(file_list)
         img_list = []
         # subsample affects image size - small numbers make it bigger
         for i in file_list:
@@ -291,13 +313,19 @@ class QuartoBoard(tk.Tk):
     # The .mainloop() method on the Tk class runs what’s known as the application’s 
     # main loop or event loop. This is an infinite loop in which all the GUI events happen.
     def play(self, event):
-        """Handle a player's move."""
+        """Handle a player's move.
+
+        Need to do:
+        Selecting only from left grid first.
+        That populating middle.
+        Then putting image in right grid. 
+        """
         clicked_btn = event.widget
         row, col = self._cells[clicked_btn]
         move = Move(row, col, self.current_player.label)
-        if self._game.is_valid_move(move): # Maybe show error message to user if False?
+        if self._game.is_valid_move_play_grid(move): # Maybe show error message to user if False?
             self._update_button(clicked_btn)
-            self._game.process_move(move)
+            self._game.process_play_move(move)
             # Maybe check winner first rather than tied
             # Maybe only check winner after row/col/diagonal was filled
             # Technically first board_size - 1 moves don't need check
@@ -332,23 +360,23 @@ class QuartoBoard(tk.Tk):
         menu_bar = tk.Menu(master=self)
         self.config(menu=menu_bar)
         file_menu = tk.Menu(master=menu_bar)
-        file_menu.add_command(
-            label="Play Again",
-            command=self.reset_board
-        )
+        # file_menu.add_command(
+        #     label="Play Again",
+        #     command=self.reset_board
+        # )
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
         
-    def reset_board(self):
-        """Reset the game's board to play again."""
-        self._game.reset_game()
-        self._update_display(msg="Ready?")
-        # Reset all the buttons
-        for button in self._cells.keys():
-            button.config(highlightbackground="lightblue")
-            button.config(text="")
-            button.config(fg="black")
+    # def reset_board(self):
+    #     """Reset the game's board to play again."""
+    #     self._game.reset_game()
+    #     self._update_display(msg="Ready?")
+    #     # Reset all the buttons
+    #     for button in self._cells.keys():
+    #         button.config(highlightbackground="lightblue")
+    #         button.config(text="")
+    #         button.config(fg="black")
 
 def main():
     """Create the game's board and run its main loop."""
