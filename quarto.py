@@ -32,8 +32,14 @@ Grid positions:
 _tkinter.TclError: couldn't recognize data in image file "pieces/.ipynb_checkpoints" - 
 just make sure this file is deleted, may have been accidentally created, use ls -al to check
 
-Next time: Select from left board to put into right board. Need a one square grid in the middle to show
+Next time: 
+Working out opening: randomly selecting piece to start.
+
+Select from left board to put into right board. Need a one square grid in the middle to show
 piece selected and remove from left board.
+
+Don't know if it will handle last move right where player only plays piece and doesn't select
+- end game functions may handle it automatically? Should work but not 100%
 
 Later extensions: Work out how to reimplement reset game again.
 
@@ -46,6 +52,7 @@ import tkinter as tk #Currently 8.6
 from tkinter import font
 from itertools import cycle
 from typing import NamedTuple
+import random
 
 class Player(NamedTuple):
     # How to do as a 3D shape rather than flat shape
@@ -194,6 +201,7 @@ class QuartoBoard(tk.Tk):
         selection_made_board = self._create_selection_made_board_grid()
         # play_board = self._create_play_board_display()
         play_board = self._create_play_board_grid()
+        # Add start game function here
         # self.blank = tk.PhotoImage()
 
     def _create_text_display(self):
@@ -309,6 +317,11 @@ class QuartoBoard(tk.Tk):
     def toggle_player(self):
         """Return a toggled player."""
         self.current_player = next(self._players)
+
+    def start_game(self):
+        """Select the first piece that will be played."""
+        starting_piece = random.randrange(0,16)
+        # Then do selection of piece and populate middle
     
     # The .mainloop() method on the Tk class runs what’s known as the application’s 
     # main loop or event loop. This is an infinite loop in which all the GUI events happen.
