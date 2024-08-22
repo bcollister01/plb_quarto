@@ -41,6 +41,9 @@ piece selected and remove from left board.
 Don't know if it will handle last move right where player only plays piece and doesn't select
 - end game functions may handle it automatically? Should work but not 100%
 
+The middle grid (selection made board_grid) does not have to be a button as users should not interact with it.
+It should update as part of the logic when selection grid is clicked.
+
 Later extensions: Work out how to reimplement reset game again.
 
 """
@@ -63,6 +66,7 @@ class Player(NamedTuple):
 class Move(NamedTuple):
     row: int
     col: int
+    board: int #1 for selection board, 2 for play board
     label: str = "" #Can we put 0000, 0001, .... here?
 
 # root = tk.Tk()
@@ -116,6 +120,18 @@ class QuartoGame:
         move_was_not_played = self._play_grid_current_moves[row][col].label == ""
         no_winner = not self._has_winner
         return no_winner and move_was_not_played
+
+   def is_valid_grid_selected(self, move):
+       if len(self._selection_grid_current_moves) == len(self._play_grid_current_moves):
+           if move.board == 1:
+               #selection grid is chosen, carry on, else throw error.
+           #selection grid should be selected then because the person is choosing the piece for the next player
+           
+       else:
+           #play board should be selected
+           
+           
+       
     
     def process_selection_move(self, move):
         """Process the current selection move.
@@ -201,8 +217,10 @@ class QuartoBoard(tk.Tk):
         selection_made_board = self._create_selection_made_board_grid()
         # play_board = self._create_play_board_display()
         play_board = self._create_play_board_grid()
+        starting_piece = self.start_game()
         # Add start game function here
         # self.blank = tk.PhotoImage()
+      
 
     def _create_text_display(self):
         display_frame = tk.Frame(master=self)
@@ -274,7 +292,8 @@ class QuartoBoard(tk.Tk):
                     height=100,
                     highlightbackground="lightblue",
                 )
-                self._cells[button] = (row, col)
+                # testing expanding the array to have a board marker in the third position of array.
+                self._cells[button] = (row, col, 1)
                 button.bind("<ButtonPress-1>", self.play)
                 button.grid(
                     row=row,
@@ -303,7 +322,8 @@ class QuartoBoard(tk.Tk):
                     height=100,
                     highlightbackground="lightblue",
                 )
-                self._cells[button] = (row, col)
+                # testing expanding the array to have a board marker in the third position of array.
+                self._cells[button] = (row, col, 2)
                 button.bind("<ButtonPress-1>", self.play)
                 button.grid(
                     row=row,
@@ -322,9 +342,19 @@ class QuartoBoard(tk.Tk):
         """Select the first piece that will be played."""
         starting_piece = random.randrange(0,16)
         # Then do selection of piece and populate middle
+        perform_selection(starting_piece)
+        
+
+    def perform_selection(selected_piece):
+        #work out row and column
+        
+        
+    
     
     # The .mainloop() method on the Tk class runs what’s known as the application’s 
     # main loop or event loop. This is an infinite loop in which all the GUI events happen.
+    # The tkinter main loop is an infinite loop used to run the application, wait for an event to occur, and process the event
+    # as long as the window is not closed.
     def play(self, event):
         """Handle a player's move.
 
@@ -334,27 +364,41 @@ class QuartoBoard(tk.Tk):
         Then putting image in right grid. 
         """
         clicked_btn = event.widget
-        row, col = self._cells[clicked_btn]
-        move = Move(row, col, self.current_player.label)
-        if self._game.is_valid_move_play_grid(move): # Maybe show error message to user if False?
-            self._update_button(clicked_btn)
-            self._game.process_play_move(move)
-            # Maybe check winner first rather than tied
-            # Maybe only check winner after row/col/diagonal was filled
-            # Technically first board_size - 1 moves don't need check
-            if self._game.is_tied():
-                self._update_display(msg="Tied game!", color="red")
-            elif self._game.has_winner():
-                # self._highlight_cells()
-                msg = f'Player "{self.current_player.label}" won!'
-                color = self.current_player.color
-                self._update_display(msg, color)
-            else:
-                self.toggle_player()
-                msg = f"{self.current_player.label}'s turn"
-                self._update_display(msg)
+        row, col, board = self._cells[clicked_btn]
+        move = Move(row, col, board, self.current_player.label)
+        # Validate if the right grid has been 
+        if self._game.is_valid_grid_selected(move):
+            # selected
+            # is_valid_grid_selected will use the third input of Move to know which grid has been clicked
+            # To Do: make this part of the logic
+            
+            # Play
+            if self._game.is_valid_move_play_grid(move): # Maybe show error message to user if False?
+                self._update_play_button(clicked_btn)
+                self._game.process_play_move(move)
+                # Maybe check winner first rather than tied
+                # Maybe only check winner after row/col/diagonal was filled
+                # Technically first board_size - 1 moves don't need check
+                if self._game.is_tied():
+                    self._update_display(msg="Tied game!", color="red")
+                elif self._game.has_winner():
+                    # self._highlight_cells()
+                    msg = f'Player "{self.current_player.label}" won!'
+                    color = self.current_player.color
+                    self._update_display(msg, color)
+                else:
+                    self.toggle_player()
+                    msg = f"{self.current_player.label}'s turn"
+                    self._update_display(msg)
                 
-    def _update_button(self, clicked_btn):
+                
+    def _update_selection_button(self, clicked_btn):
+        # Need to set to a 3D image for us
+        clicked_btn.config(image=tk.PhotoImage())
+        #clicked_btn.config(text=self.current_player.label)
+        #clicked_btn.config(fg=self.current_player.color)
+    
+    def _update_play_button(self, clicked_btn):
         # Need to set to a 3D image for us
         clicked_btn.config(image=self.current_player.image)
         #clicked_btn.config(text=self.current_player.label)
