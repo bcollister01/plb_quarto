@@ -122,16 +122,18 @@ class QuartoGame:
         return no_winner and move_was_not_played
 
    def is_valid_grid_selected(self, move):
+       """Return True if right board selected, return False if wrong board"""
        if len(self._selection_grid_current_moves) == len(self._play_grid_current_moves):
            if move.board == 1:
-               #selection grid is chosen, carry on, else throw error.
-           #selection grid should be selected then because the person is choosing the piece for the next player
-           
+               return True
+           else:
+               return False         
        else:
-           #play board should be selected
-           
-           
-       
+           if move.board == 2:
+               return True
+           else:
+               return False
+                  
     
     def process_selection_move(self, move):
         """Process the current selection move.
@@ -390,6 +392,9 @@ class QuartoBoard(tk.Tk):
                     self.toggle_player()
                     msg = f"{self.current_player.label}'s turn"
                     self._update_display(msg)
+        else:
+            msg = f"You must select the other board."
+            self._update_display(msg)
                 
                 
     def _update_selection_button(self, clicked_btn):
