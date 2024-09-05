@@ -146,10 +146,12 @@ class QuartoGame:
         self._selection_grid_current_moves[row][col] = move
         self.total_selections = self.total_selections + 1
     
-    def process_play_move(self, move):
+    def process_play_move(self, move, piece_number):
         """Process the current move and check if it's a win."""
         row, col = move.row, move.col
+        print(move)
         self._play_grid_current_moves[row][col] = move
+        print("play_grid_current_moves",self._play_grid_current_moves[row][col])
         self.total_plays = self.total_plays + 1
         for combo in self._winning_combos:
             #Set logic may not work for ours
@@ -161,7 +163,19 @@ class QuartoGame:
                 self._play_grid_current_moves[n][m].label
                 for n, m in combo
             )
-            is_win = (len(results) == 1) and ("" not in results)
+            # now checking if there is a matching characeristic on pieces
+            if (len(results) == 4) and ("" not in results):
+                results2 = []
+                for i in range(4):
+                    count = 0 
+                    for n, m in combo:
+                        count = count + int(str(self._play_grid_current_moves[n][m].label)[i])
+                    results2.append(count)
+            else:
+                continue
+                    
+                
+            is_win = (0 in results2 or 4 in results2)
             if is_win:
                 self._has_winner = True
                 self.winner_combo = combo
@@ -372,7 +386,6 @@ class QuartoBoard(tk.Tk):
         clicked_btn = event.widget
         row, col, board = self._cells[clicked_btn]
         move = Move(row, col, board, self.current_player.label)
-        print(move)
         # Validate if the right grid has been 
         if self._game.is_valid_grid_selected(move):
             # Now we need to check which board was selected and condition next steps on it
@@ -382,6 +395,7 @@ class QuartoBoard(tk.Tk):
                 if self._game.is_valid_move_selection_grid(move):
                     # Do selection steps
                     self.piece_number = move.row * 4 + move.col
+                    move = Move(row, col, board, '{0:04b}'.format(self.piece_number))
                     print(self.piece_number)
                     self._update_selection_button(clicked_btn)
                     self._game.process_selection_move(move)
@@ -396,9 +410,10 @@ class QuartoBoard(tk.Tk):
                 print(self.piece_number)
             # Play
                 if self._game.is_valid_move_play_grid(move): # Maybe show error message to user if False?
+                    move = Move(row, col, board, '{0:04b}'.format(self.piece_number))
                     self._update_play_button(clicked_btn, self.piece_number)
                     self.selection_made_button.config(image=tk.PhotoImage())
-                    self._game.process_play_move(move)
+                    self._game.process_play_move(move, self.piece_number)
                     # Maybe check winner first rather than tied
                     # Maybe only check winner after row/col/diagonal was filled
                     # Technically first board_size - 1 moves don't need check
