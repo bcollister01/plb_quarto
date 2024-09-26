@@ -94,7 +94,6 @@ class QuartoGame:
             [Move(row, col, 1) for col in range(self.board_size)]
             for row in range(self.board_size)
         ]
-        print(self._selection_grid_current_moves)
 
     def _setup_play_board(self):
         self._play_grid_current_moves = [
@@ -149,9 +148,7 @@ class QuartoGame:
     def process_play_move(self, move, piece_number):
         """Process the current move and check if it's a win."""
         row, col = move.row, move.col
-        print(move)
         self._play_grid_current_moves[row][col] = move
-        print("play_grid_current_moves",self._play_grid_current_moves[row][col])
         self.total_plays = self.total_plays + 1
         for combo in self._winning_combos:
             #Set logic may not work for ours
@@ -390,13 +387,11 @@ class QuartoBoard(tk.Tk):
         if self._game.is_valid_grid_selected(move):
             # Now we need to check which board was selected and condition next steps on it
             if move.board == 1:
-                print('selection step')
                 # Select
                 if self._game.is_valid_move_selection_grid(move):
                     # Do selection steps
                     self.piece_number = move.row * 4 + move.col
                     move = Move(row, col, board, '{0:04b}'.format(self.piece_number))
-                    print(self.piece_number)
                     self._update_selection_button(clicked_btn)
                     self._game.process_selection_move(move)
                     self.selection_made_button.config(image=self.img_list[self.piece_number])
@@ -406,8 +401,6 @@ class QuartoBoard(tk.Tk):
             # To Do: make this part of the logic
 
             if move.board == 2:
-                print('play step')
-                print(self.piece_number)
             # Play
                 if self._game.is_valid_move_play_grid(move): # Maybe show error message to user if False?
                     move = Move(row, col, board, '{0:04b}'.format(self.piece_number))
